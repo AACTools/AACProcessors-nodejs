@@ -92,6 +92,10 @@ export function getOs(): typeof import('os') {
 }
 
 export function isNodeRuntime(): boolean {
+  const browserGlobals = globalThis as { window?: unknown };
+  if (browserGlobals.window !== undefined) {
+    return false;
+  }
   return typeof process !== 'undefined' && !!process.versions?.node;
 }
 
