@@ -31,6 +31,14 @@ interface OpmlDocument {
   };
 }
 
+function sanitizeOutlineId(text: string): string {
+  const slug = text.replace(/[^a-zA-Z0-9]/g, '_');
+  if (slug === '__proto__' || slug === 'prototype' || slug === 'constructor') {
+    return `_${slug}`;
+  }
+  return slug;
+}
+
 class OpmlProcessor extends BaseProcessor {
   readonly capabilities = {
     wordList: 'none' as const,
@@ -57,7 +65,7 @@ class OpmlProcessor extends BaseProcessor {
       return { page: null, childPages: [] };
     }
     const page = new AACPage({
-      id: text.replace(/[^a-zA-Z0-9]/g, '_'),
+      id: sanitizeOutlineId(text),
       name: text,
       grid: [],
       buttons: [],
@@ -76,7 +84,7 @@ class OpmlProcessor extends BaseProcessor {
             id: `nav_${page.id}_${childText}`,
             label: childText,
             message: '',
-            targetPageId: childText.replace(/[^a-zA-Z0-9]/g, '_'),
+            targetPageId: sanitizeOutlineId(childText),
           });
           // Load path: do not record as a user mutation
           page._loadButton(button);
