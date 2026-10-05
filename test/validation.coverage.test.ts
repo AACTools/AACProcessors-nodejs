@@ -519,6 +519,18 @@ describe('Validation Coverage Tests', () => {
   });
 
   describe('GridsetValidator - Extended Coverage', () => {
+    it('should parse BOM-prefixed grid.xml entries inside a real gridset archive', async () => {
+      const examplePath = path.join(__dirname, '..', 'examples', 'example.gridset');
+      const result = await GridsetValidator.validateFile(examplePath);
+
+      const gridChecks = result.results.filter((c) => c.type.startsWith('grid_xml['));
+      expect(gridChecks.length).toBeGreaterThan(0);
+      for (const check of gridChecks) {
+        expect(check.valid).toBe(true);
+        expect(check.error || '').not.toContain('failed to parse XML');
+      }
+    });
+
     it('should validate a full Grid 3 grid.xml', async () => {
       const fullGrid = `<?xml version="1.0" encoding="utf-8"?>
       <Grid xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">

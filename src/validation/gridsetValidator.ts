@@ -113,7 +113,7 @@ export class GridsetValidator extends BaseValidator {
     await this.add_check('xml_parse', 'valid XML', async () => {
       try {
         const parser = new xml2js.Parser();
-        const contentStr = decodeText(content);
+        const contentStr = decodeText(content).replace(/^\uFEFF/, '');
         xmlObj = await parser.parseStringPromise(contentStr);
       } catch (e: any) {
         this.err(`Failed to parse XML: ${e.message}`, true);
@@ -164,7 +164,9 @@ export class GridsetValidator extends BaseValidator {
         try {
           const gridXml = await zip.readFile(entry);
           const parser = new xml2js.Parser();
-          const xmlObj = await parser.parseStringPromise(gridXml);
+          const xmlObj = await parser.parseStringPromise(
+            decodeText(toUint8Array(gridXml)).replace(/^\uFEFF/, '')
+          );
           const grid = xmlObj.Grid || xmlObj.grid;
           if (!grid) {
             this.err(`${entry}: missing root <Grid> element`);
@@ -188,7 +190,9 @@ export class GridsetValidator extends BaseValidator {
         try {
           const settingsXml = await zip.readFile(settingsEntry);
           const parser = new xml2js.Parser();
-          const xmlObj = await parser.parseStringPromise(settingsXml);
+          const xmlObj = await parser.parseStringPromise(
+            decodeText(toUint8Array(settingsXml)).replace(/^\uFEFF/, '')
+          );
           const settings =
             xmlObj.GridSetSettings || xmlObj.gridSetSettings || xmlObj.GridsetSettings;
           if (!settings) {
