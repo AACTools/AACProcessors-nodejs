@@ -90,7 +90,7 @@ NB: Please use [https://aactools.co.uk](https://aactools.co.uk) for a far more c
 
 ## Documentation
 
-- API reference (TypeDoc): https://willwade.github.io/AACProcessors-nodejs/
+- API reference (TypeDoc): https://aactools.github.io/AACProcessors-nodejs/
 - Metrics guide: `src/utilities/analytics/docs/AAC_METRICS_GUIDE.md`
 - Vocabulary analysis guide: `src/utilities/analytics/docs/VOCABULARY_ANALYSIS_GUIDE.md`
 
