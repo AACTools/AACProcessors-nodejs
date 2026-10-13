@@ -50,6 +50,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sized by highest button index + 1; non-square counts derive a near-square
   rectangle (cols = ⌈√n⌉, rows = ⌈n/cols⌉) instead of a forced square.
 
+### Changed (breaking)
+
+- **Morphology parsers are now async.** `Grid3VerbsParser.parseZip`/
+  `parseZipDetailed`/`parseXmlFileDetailed`/`parseCustomDirectory`,
+  `TDSnapLexiconParser.parseDb`, `WordFormGenerator.generateFromPos` and
+  `MetricsCalculator.analyze` now return promises as part of making the
+  parsers safe to bundle in browser/React Native (see below). **Migration:**
+  `await` these calls — e.g. `const metrics = await calculator.analyze(tree)`.
+
 ### Fixed
 
 - **Browser/native bundling of the morphology parsers.** `Grid3VerbsParser`
@@ -60,12 +69,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Grid3VerbsParser` reads archives through `getZipAdapter` (Node `adm-zip` /
   browser `jszip`), and `TDSnapLexiconParser` opens databases through
   `openSqliteDatabase` (`better-sqlite3` on Node, `sql.js` in the browser), so
-  these modules are safe to bundle for web and native.
-
-  **Breaking change:** `Grid3VerbsParser.parseZip`/`parseZipDetailed`/
-  `parseXmlFileDetailed`/`parseCustomDirectory`, `TDSnapLexiconParser.parseDb`,
-  `WordFormGenerator.generateFromPos` and `MetricsCalculator.analyze` are now
-  asynchronous.
+  these modules are safe to bundle for web and native. Browser callers pass
+  `File`/`Blob` inputs rather than file paths.
 
 - **OBF/OBZ manifest `root` bug.** `ObfProcessor.saveFromTree` and
   `saveModifiedTree` set `manifest.root` to the board **ID** (e.g. `"1"`)
