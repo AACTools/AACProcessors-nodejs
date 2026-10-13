@@ -125,8 +125,9 @@ describe('dumpVocabulary', () => {
       { label: 'hello', is_word_form: false },
     ]);
     const dump = dumpVocabulary(TREE, { metrics });
-    const wf = dump.summary.wordForms!;
+    const wf = dump.summary.wordForms;
     expect(wf).not.toBeNull();
+    if (!wf) throw new Error('expected wordForms to be present');
     expect(wf.entries).toBe(1); // going only
     expect(wf.byPartOfSpeech['Verb']).toBe(1);
     expect(wf.parentButtons).toBe(1);

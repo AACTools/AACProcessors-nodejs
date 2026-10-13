@@ -109,18 +109,18 @@ describe('GotalkNowProcessor', () => {
 
       const btn0 = page1.buttons.find((b) => b.id === '1_btn_0');
       expect(btn0).toBeDefined();
-      expect(btn0!.label).toBe('Ich möchte mit ChiChi spielen!');
+      expect(btn0?.label).toBe('Ich möchte mit ChiChi spielen!');
       // Empty TTSText → label is spoken.
-      expect(btn0!.message).toBe('Ich möchte mit ChiChi spielen!');
-      expect(String(btn0!.semanticAction!.intent)).toBe('SPEAK_TEXT');
+      expect(btn0?.message).toBe('Ich möchte mit ChiChi spielen!');
+      expect(String(btn0?.semanticAction?.intent)).toBe('SPEAK_TEXT');
     });
 
     it('uses explicit TTSText as message when set', async () => {
       const processor = new GotalkNowProcessor();
       const tree = await processor.loadIntoTree(fixturePath);
       const btn1 = tree.pages['1'].buttons.find((b) => b.id === '1_btn_1');
-      expect(btn1!.label).toBe('Willst du spielen?');
-      expect(btn1!.message).toBe('Willst du spielen?');
+      expect(btn1?.label).toBe('Willst du spielen?');
+      expect(btn1?.message).toBe('Willst du spielen?');
     });
 
     it('maps Jump buttons to NAVIGATE_TO semantic actions', async () => {
@@ -128,8 +128,8 @@ describe('GotalkNowProcessor', () => {
       const tree = await processor.loadIntoTree(fixturePath);
       const jumpBtn = tree.pages['-5'].buttons.find((b) => b.id === '-5_btn_3');
       expect(jumpBtn).toBeDefined();
-      expect(String(jumpBtn!.semanticAction!.intent)).toBe('NAVIGATE_TO');
-      expect(jumpBtn!.targetPageId).toBe('1');
+      expect(String(jumpBtn?.semanticAction?.intent)).toBe('NAVIGATE_TO');
+      expect(jumpBtn?.targetPageId).toBe('1');
     });
 
     it('derives a grid from ButtonCount', async () => {
@@ -215,11 +215,11 @@ describe('GotalkNowProcessor', () => {
       expect(reloaded.pages['1'].buttons.length).toBe(2);
 
       const speakBtn = reloaded.pages['1'].buttons.find((b) => b.id === '1_btn_0');
-      expect(speakBtn!.label).toBe('Hello');
+      expect(speakBtn?.label).toBe('Hello');
 
       const navBtn = reloaded.pages['1'].buttons.find((b) => b.id === '1_btn_1');
-      expect(String(navBtn!.semanticAction!.intent)).toBe('NAVIGATE_TO');
-      expect(navBtn!.targetPageId).toBe('2');
+      expect(String(navBtn?.semanticAction?.intent)).toBe('NAVIGATE_TO');
+      expect(navBtn?.targetPageId).toBe('2');
     });
   });
 
@@ -403,31 +403,31 @@ describe('GotalkNowProcessor', () => {
       const processor = new GotalkNowProcessor();
       const tree = await processor.loadIntoTree(nestedFixturePath);
       const btn = tree.pages['1'].buttons.find((b) => b.label === 'Hund');
-      expect(btn!.resolvedImageEntry).toBe(`${DIR}/my-dog.jpg`);
+      expect(btn?.resolvedImageEntry).toBe(`${DIR}/my-dog.jpg`);
     });
 
     it('marks library symbols without resolving a bundled file', async () => {
       const processor = new GotalkNowProcessor();
       const tree = await processor.loadIntoTree(nestedFixturePath);
       const btn = tree.pages['1'].buttons.find((b) => b.label === 'trinken');
-      expect(btn!.symbolLibrary).toBe('Metacom');
-      expect(btn!.symbolPath).toBe('symbols/trinken.png');
-      expect(btn!.resolvedImageEntry).toBeUndefined();
+      expect(btn?.symbolLibrary).toBe('Metacom');
+      expect(btn?.symbolPath).toBe('symbols/trinken.png');
+      expect(btn?.resolvedImageEntry).toBeUndefined();
     });
 
     it('skips GoTalk Image Library clip-art and picks the user image entry', async () => {
       const processor = new GotalkNowProcessor();
       const tree = await processor.loadIntoTree(nestedFixturePath);
       const btn = tree.pages['1'].buttons.find((b) => b.label === 'Pause');
-      expect(btn!.symbolLibrary).not.toBe('GoTalk Image Library');
-      expect(btn!.resolvedImageEntry).toBe(`${DIR}/1-2-9.png`);
+      expect(btn?.symbolLibrary).not.toBe('GoTalk Image Library');
+      expect(btn?.resolvedImageEntry).toBe(`${DIR}/1-2-9.png`);
     });
 
     it('falls back to the rendered snapshot <page>-<btn>-<count>.png', async () => {
       const processor = new GotalkNowProcessor();
       const tree = await processor.loadIntoTree(nestedFixturePath);
       const btn = tree.pages['1'].buttons.find((b) => b.label === 'fertig');
-      expect(btn!.resolvedImageEntry).toBe(`${DIR}/1-3-9.png`);
+      expect(btn?.resolvedImageEntry).toBe(`${DIR}/1-3-9.png`);
     });
 
     it('treats JumpTo 0 as no jump but keeps real Jump targets', async () => {
@@ -435,8 +435,8 @@ describe('GotalkNowProcessor', () => {
       const tree = await processor.loadIntoTree(nestedFixturePath);
       const back = tree.pages['1'].buttons.find((b) => b.label === 'zurück');
       const fwd = tree.pages['1'].buttons.find((b) => b.label === 'weiter');
-      expect(back!.targetPageId).toBeUndefined();
-      expect(fwd!.targetPageId).toBe('2');
+      expect(back?.targetPageId).toBeUndefined();
+      expect(fwd?.targetPageId).toBe('2');
     });
 
     it('sizes sparse pages by max button index + 1', async () => {

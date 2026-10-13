@@ -82,7 +82,7 @@ describe('OpmlProcessor round-trip', () => {
       expect(reloadedParent).toBeDefined();
       const navButton = reloadedParent?.buttons[0];
       expect(navButton?.targetPageId).toBe('___proto__');
-      expect(reloaded.getPage(navButton!.targetPageId!)).toBeDefined();
+      expect(reloaded.getPage(navButton?.targetPageId ?? '')).toBeDefined();
     } finally {
       if (fs.existsSync(out)) fs.unlinkSync(out);
     }
