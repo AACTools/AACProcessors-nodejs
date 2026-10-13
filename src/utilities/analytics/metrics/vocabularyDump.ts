@@ -52,8 +52,10 @@ class SourceTally {
 
   counts(): VocabularySourceCounts {
     const byPartOfSpeech: Record<string, number> = {};
-    for (const tag of Array.from(this.byPos.keys()).sort((a, b) => a.localeCompare(b))) {
-      byPartOfSpeech[tag] = this.byPos.get(tag)!.size;
+    for (const [tag, set] of Array.from(this.byPos.entries()).sort(([a], [b]) =>
+      a.localeCompare(b)
+    )) {
+      byPartOfSpeech[tag] = set.size;
     }
     return {
       entries: this.entries,

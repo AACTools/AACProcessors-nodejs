@@ -226,7 +226,10 @@ describe('competence / lexicalRichness (Brunet W, Honoré R)', () => {
   it('W decreases (richer) as vocabulary diversifies at fixed N', () => {
     const narrow = lexicalRichness(['go', 'go', 'go', 'go', 'go', 'go']);
     const wide = lexicalRichness(['go', 'went', 'going', 'goes', 'gone', 'go']);
-    expect(wide.brunetsW!).toBeLessThan(narrow.brunetsW!);
+    if (wide.brunetsW === null || narrow.brunetsW === null) {
+      throw new Error('expected Brunets W to be defined');
+    }
+    expect(wide.brunetsW).toBeLessThan(narrow.brunetsW);
   });
 });
 
