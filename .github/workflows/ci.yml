@@ -48,6 +48,16 @@ jobs:
       - name: Verify browser build output
         run: test -f dist/browser/index.browser.js
 
+      # Metro 0.87 requires Node >= 22.13, so only run the React Native guard
+      # on the Node 22 leg. `test:ci` has already built dist/browser.
+      - name: Install Metro fixture dependencies
+        if: matrix.node-version == 22
+        run: npm ci --prefix test/rn-metro-check
+
+      - name: Verify browser build bundles with Metro (React Native)
+        if: matrix.node-version == 22
+        run: node scripts/verify-rn-bundle.js
+
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         with:
@@ -55,29 +65,3 @@ jobs:
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
-
-  rn-bundle:
-    name: React Native bundle guard
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          # Metro 0.87 requires Node >= 22.13 (the test matrix also runs Node 20).
-          node-version: 22
-          cache: "npm"
-          cache-dependency-path: |
-            package-lock.json
-            test/rn-metro-check/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Metro fixture dependencies
-        run: npm ci --prefix test/rn-metro-check
-
-      - name: Verify browser build bundles with Metro (React Native)
-        run: npm run verify:rn-bundle
