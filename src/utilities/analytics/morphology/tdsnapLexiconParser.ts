@@ -1,3 +1,5 @@
+import { requireBetterSqlite3 } from '../../../utils/sqlite';
+
 export interface TDSnapLexiconForm {
   tag: string;
   form: string;
@@ -22,10 +24,8 @@ interface PosSubclassRow {
 export class TDSnapLexiconParser {
   parseDb(dbPath: string, locale?: string): TDSnapLexiconData {
     const detectedLocale = locale || this.inferLocale(dbPath);
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const Database = require('better-sqlite3');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const db = new Database(dbPath, { readonly: true }) as import('better-sqlite3').Database;
+    const Database = requireBetterSqlite3();
+    const db = new Database(dbPath, { readonly: true });
 
     try {
       return this.extractAll(db, detectedLocale);

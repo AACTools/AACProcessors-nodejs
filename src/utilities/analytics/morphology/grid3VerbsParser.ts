@@ -1,7 +1,16 @@
 import { XMLParser } from 'fast-xml-parser';
-import AdmZip from 'adm-zip';
-import { join, dirname, basename } from 'path';
+import { defaultFileAdapter, getNodeRequire } from '../../../utils/io';
 import type { VerbFormWithConditions, Grid3VerbFormsDetailed } from './types';
+
+// Resolve path helpers through the file adapter (lazily) so this module never
+// statically imports Node's `path` module, which React Native/Metro cannot bundle.
+const { join, dirname, basename } = defaultFileAdapter;
+
+// `adm-zip` depends on Node's `path`, so load it lazily to keep this module
+// bundleable in browser/React Native environments (where only parseXml is used).
+function loadAdmZip(): typeof import('adm-zip') {
+  return getNodeRequire()('adm-zip') as typeof import('adm-zip');
+}
 
 export interface Grid3VerbForms {
   locale: string;
@@ -77,15 +86,14 @@ export class Grid3VerbsParser {
     return { locale: detectedLocale, verbs: result };
   }
 
-  /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-argument */
   parseXmlFileDetailed(filePath: string): Grid3VerbFormsDetailed {
-    const fs = require('fs');
+    const fs = getNodeRequire()('fs') as typeof import('fs');
     const xml = fs.readFileSync(filePath, 'utf-8');
     return this.parseXmlDetailed(xml);
   }
-  /* eslint-enable @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-argument */
 
   parseZip(zipPath: string): Grid3VerbForms {
+    const AdmZip = loadAdmZip();
     const zip = new AdmZip(zipPath);
     const entries = zip.getEntries();
     const verbEntry = entries.find((e) => e.entryName.toLowerCase().endsWith('verbs.xml'));
@@ -98,6 +106,7 @@ export class Grid3VerbsParser {
   }
 
   parseZipDetailed(zipPath: string): Grid3VerbFormsDetailed {
+    const AdmZip = loadAdmZip();
     const zip = new AdmZip(zipPath);
     const entries = zip.getEntries();
     const verbEntry = entries.find((e) => e.entryName.toLowerCase().endsWith('verbs.xml'));
@@ -123,12 +132,13 @@ export class Grid3VerbsParser {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async parseInstalledLocales(grid3InstallPath?: string): Promise<Map<string, Grid3VerbForms>> {
     const installPath = grid3InstallPath || this.getDefaultInstallPath();
     const results = new Map<string, Grid3VerbForms>();
     if (!installPath) return results;
 
-    const fs = await import('fs');
+    const fs = getNodeRequire()('fs') as typeof import('fs');
     const localeDir = join(installPath, 'Locale');
     let locales: string[];
     try {
@@ -169,13 +179,12 @@ export class Grid3VerbsParser {
     dirPath: string,
     detailed: true
   ): Map<string, import('./types').Grid3VerbFormsDetailed>;
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   parseCustomDirectory(
     dirPath: string,
     detailed = false
   ): Map<string, Grid3VerbForms> | Map<string, import('./types').Grid3VerbFormsDetailed> {
-    /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
-    const fs = require('fs');
+    /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
+    const fs = getNodeRequire()('fs') as typeof import('fs');
     let locales: string[];
     try {
       locales = fs
@@ -222,8 +231,7 @@ export class Grid3VerbsParser {
       'C:\\Program Files\\Smartbox\\Grid 3',
     ];
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const fs = require('fs');
+      const fs = getNodeRequire()('fs') as typeof import('fs');
       for (const p of paths) {
         if (fs.existsSync(p)) return p;
       }
