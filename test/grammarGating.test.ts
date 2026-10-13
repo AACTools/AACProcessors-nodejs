@@ -153,7 +153,7 @@ describe('Grammar Gating', () => {
       calc = new MetricsCalculator();
     });
 
-    test('pages WITHOUT suffix buttons get NO morphology forms', () => {
+    test('pages WITHOUT suffix buttons get NO morphology forms', async () => {
       const tree = makeTree([
         {
           id: 'home',
@@ -162,13 +162,13 @@ describe('Grammar Gating', () => {
         },
       ]);
 
-      calc.analyze(tree, { useSmartGrammar: true });
+      await calc.analyze(tree, { useSmartGrammar: true });
 
       const goBtn = tree.pages['home'].grid[0][0];
       expect(goBtn?.predictions).toBeUndefined();
     });
 
-    test('pages WITH suffix buttons get morphology forms', () => {
+    test('pages WITH suffix buttons get morphology forms', async () => {
       const tree = makeTree([
         {
           id: 'home',
@@ -182,14 +182,14 @@ describe('Grammar Gating', () => {
         },
       ]);
 
-      calc.analyze(tree, { useSmartGrammar: true });
+      await calc.analyze(tree, { useSmartGrammar: true });
 
       const goBtn = tree.pages['home'].grid[0][0];
       expect(goBtn?.predictions).toBeDefined();
       expect((goBtn?.predictions || []).length).toBeGreaterThan(0);
     });
 
-    test('pages with only -s suffix do not produce adjective comparative/superlative forms', () => {
+    test('pages with only -s suffix do not produce adjective comparative/superlative forms', async () => {
       const tree = makeTree([
         {
           id: 'home',
@@ -203,7 +203,7 @@ describe('Grammar Gating', () => {
         },
       ]);
 
-      calc.analyze(tree, { useSmartGrammar: true });
+      await calc.analyze(tree, { useSmartGrammar: true });
 
       const bigBtn = tree.pages['home'].grid[0][0];
       if (bigBtn?.predictions && bigBtn.predictions.length > 0) {
@@ -212,7 +212,7 @@ describe('Grammar Gating', () => {
       }
     });
 
-    test('Magic Wand pages (with all 6 suffixes) produce full forms', () => {
+    test('Magic Wand pages (with all 6 suffixes) produce full forms', async () => {
       const tree = makeTree([
         {
           id: 'home',
@@ -231,7 +231,7 @@ describe('Grammar Gating', () => {
         },
       ]);
 
-      calc.analyze(tree, { useSmartGrammar: true });
+      await calc.analyze(tree, { useSmartGrammar: true });
 
       const bigBtn = tree.pages['home'].grid[0][0];
       expect(bigBtn?.predictions).toBeDefined();
@@ -239,7 +239,7 @@ describe('Grammar Gating', () => {
       expect(bigBtn?.predictions).toContain('biggest');
     });
 
-    test('noun on page with -s suffix gets plural form', () => {
+    test('noun on page with -s suffix gets plural form', async () => {
       const tree = makeTree([
         {
           id: 'home',
@@ -253,7 +253,7 @@ describe('Grammar Gating', () => {
         },
       ]);
 
-      calc.analyze(tree, { useSmartGrammar: true });
+      await calc.analyze(tree, { useSmartGrammar: true });
 
       const bookBtn = tree.pages['home'].grid[0][0];
       expect(bookBtn?.predictions).toBeDefined();
@@ -268,7 +268,7 @@ describe('Grammar Gating', () => {
       calc = new MetricsCalculator();
     });
 
-    test('when no Inflector buttons exist, no morphology forms are generated', () => {
+    test('when no Inflector buttons exist, no morphology forms are generated', async () => {
       const tree = makeTree([
         {
           id: 'home',
@@ -277,7 +277,7 @@ describe('Grammar Gating', () => {
         },
       ]);
 
-      calc.analyze(tree, { useSmartGrammar: true, tdsnapLexiconPath: undefined });
+      await calc.analyze(tree, { useSmartGrammar: true, tdsnapLexiconPath: undefined });
 
       const catBtn = tree.pages['home'].grid[0][0];
       expect(catBtn?.predictions).toBeUndefined();
@@ -390,7 +390,7 @@ describe('Grammar Gating', () => {
       calc = new MetricsCalculator();
     });
 
-    test('returns no smart grammar when only Suffix buttons exist', () => {
+    test('returns no smart grammar when only Suffix buttons exist', async () => {
       const _tree = makeTree([
         {
           id: 'home',
@@ -404,11 +404,11 @@ describe('Grammar Gating', () => {
         },
       ]);
 
-      const result = calc.analyze(_tree);
+      const result = await calc.analyze(_tree);
       expect(result.total_words).toBe(0);
     });
 
-    test('returns no smart grammar when only Inflector buttons exist', () => {
+    test('returns no smart grammar when only Inflector buttons exist', async () => {
       const _tree = makeTree([
         {
           id: 'home',
@@ -426,11 +426,11 @@ describe('Grammar Gating', () => {
         },
       ]);
 
-      const result = calc.analyze(_tree);
+      const result = await calc.analyze(_tree);
       expect(result.total_words).toBe(0);
     });
 
-    test('real POS tags trigger smart grammar even alongside Suffix buttons', () => {
+    test('real POS tags trigger smart grammar even alongside Suffix buttons', async () => {
       const tree = makeTree([
         {
           id: 'home',
@@ -444,7 +444,7 @@ describe('Grammar Gating', () => {
         },
       ]);
 
-      const result = calc.analyze(tree);
+      const result = await calc.analyze(tree);
       expect(result.total_words).toBeGreaterThan(0);
     });
   });

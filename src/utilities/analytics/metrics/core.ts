@@ -47,7 +47,7 @@ export class MetricsCalculator {
    * @param options - Optional configuration for metrics calculation
    * @returns Complete metrics result
    */
-  analyze(tree: AACTree, options: MetricsOptions = {}): MetricsResult {
+  async analyze(tree: AACTree, options: MetricsOptions = {}): Promise<MetricsResult> {
     // Get root board - prioritize tree.rootId, then fall back to boards with no parentId
     let rootBoard: AACPage | undefined;
     if (tree.rootId) {
@@ -122,7 +122,7 @@ export class MetricsCalculator {
     // Expand morphological predictions from POS tags if enabled or auto-detected
     const useSmartGrammar = options.useSmartGrammar === true || this.treeHasPosTags(tree);
     if (useSmartGrammar) {
-      this.expandMorphologicalPredictions(tree, options);
+      await this.expandMorphologicalPredictions(tree, options);
     }
 
     if (useSmartGrammar) {
@@ -789,7 +789,10 @@ export class MetricsCalculator {
    * button's predictions array. This is done as a pre-processing step
    * before calculateWordFormMetrics assigns effort to each form.
    */
-  private expandMorphologicalPredictions(tree: AACTree, options: MetricsOptions): void {
+  private async expandMorphologicalPredictions(
+    tree: AACTree,
+    options: MetricsOptions
+  ): Promise<void> {
     const locale = options.morphologyLocale || 'en-gb';
     let morph: MorphologyEngine;
 
@@ -797,7 +800,7 @@ export class MetricsCalculator {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { TDSnapLexiconParser } = require('../morphology/tdsnapLexiconParser');
       const parser = new TDSnapLexiconParser();
-      const lexiconData = parser.parseDb(options.tdsnapLexiconPath, locale.replace('-', '_'));
+      const lexiconData = await parser.parseDb(options.tdsnapLexiconPath, locale.replace('-', '_'));
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       morph = MorphologyEngine.fromTDSnapLexicon(lexiconData);
       this.expandTDSnapPredictions(tree, morph);
@@ -808,7 +811,7 @@ export class MetricsCalculator {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { Grid3VerbsParser } = require('../morphology/grid3VerbsParser');
       const parser = new Grid3VerbsParser();
-      const verbForms = parser.parseZip(options.grid3VerbsPath);
+      const verbForms = await parser.parseZip(options.grid3VerbsPath);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       morph = MorphologyEngine.fromGrid3Verbs(verbForms);
       this.expandGrid3Predictions(tree, morph);

@@ -92,8 +92,8 @@ describe('Grid3VerbsParser - Synthetic XML (always runs)', () => {
   describe('parseXmlDetailed (forms with conditions)', () => {
     let detailed: Map<string, Array<{ value: string; conditions: Map<string, string> }>>;
 
-    beforeAll(() => {
-      const result = parser.parseXmlFileDetailed(SYNTHETIC_XML);
+    beforeAll(async () => {
+      const result = await parser.parseXmlFileDetailed(SYNTHETIC_XML);
       detailed = result.verbs;
     });
 
@@ -140,7 +140,7 @@ describe('Grid3VerbsParser - Synthetic XML (always runs)', () => {
   });
 
   describe('parseZip with synthetic data', () => {
-    test('can parse a zip file containing verbs.xml', () => {
+    test('can parse a zip file containing verbs.xml', async () => {
       // Create a temporary zip with our synthetic XML
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const AdmZip = require('adm-zip');
@@ -153,7 +153,7 @@ describe('Grid3VerbsParser - Synthetic XML (always runs)', () => {
         zip.addFile('verbs.xml', fs.readFileSync(SYNTHETIC_XML));
         zip.writeZip(zipPath);
 
-        const result = parser.parseZip(zipPath);
+        const result = await parser.parseZip(zipPath);
         expect(result.verbs.size).toBe(3);
         expect(result.verbs.get('go')).toContain('went');
       } finally {
@@ -172,17 +172,17 @@ describe('Grid3VerbsParser - External morphology data', () => {
   // These tests run when GRID3_MORPHOLOGY_DIR points to a valid
   // Grid 3 Locale directory (or a directory someone has copied
   // the verbs.zip files into). On CI without Grid 3, these skip.
-  test('parses en-GB verbs.zip', () => {
+  test('parses en-GB verbs.zip', async () => {
     const zipPath = getMorphZip('en-GB');
     if (!fileExists(zipPath)) return;
-    const result = parser.parseZip(zipPath);
+    const result = await parser.parseZip(zipPath);
     expect(result.verbs.size).toBeGreaterThan(100);
   });
 
-  test('en-GB go -> goes, going, gone, went', () => {
+  test('en-GB go -> goes, going, gone, went', async () => {
     const zipPath = getMorphZip('en-GB');
     if (!fileExists(zipPath)) return;
-    const result = parser.parseZip(zipPath);
+    const result = await parser.parseZip(zipPath);
     const goForms = result.verbs.get('go');
     expect(goForms).toBeDefined();
     expect(goForms).toContain('goes');
@@ -191,10 +191,10 @@ describe('Grid3VerbsParser - External morphology data', () => {
     expect(goForms).toContain('went');
   });
 
-  test('en-GB detailed has conditions', () => {
+  test('en-GB detailed has conditions', async () => {
     const zipPath = getMorphZip('en-GB');
     if (!fileExists(zipPath)) return;
-    const result = parser.parseZipDetailed(zipPath);
+    const result = await parser.parseZipDetailed(zipPath);
     const goForms = result.verbs.get('go');
     expect(goForms).toBeDefined();
     expect(goForms!.length).toBeGreaterThan(0);
@@ -202,10 +202,10 @@ describe('Grid3VerbsParser - External morphology data', () => {
     expect(went).toBeDefined();
   });
 
-  test('parses nb-NO verbs.zip', () => {
+  test('parses nb-NO verbs.zip', async () => {
     const zipPath = getMorphZip('nb-NO');
     if (!fileExists(zipPath)) return;
-    const result = parser.parseZip(zipPath);
+    const result = await parser.parseZip(zipPath);
     expect(result.verbs.size).toBeGreaterThan(100);
   });
 });

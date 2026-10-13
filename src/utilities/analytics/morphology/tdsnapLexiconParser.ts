@@ -1,3 +1,8 @@
+import { defaultFileAdapter } from '../../../utils/io';
+import type { FileAdapter } from '../../../utils/io';
+import { openSqliteDatabase } from '../../../utils/sqlite';
+import type { SqliteDatabaseAdapter } from '../../../utils/sqlite';
+
 export interface TDSnapLexiconForm {
   tag: string;
   form: string;
@@ -20,17 +25,27 @@ interface PosSubclassRow {
 }
 
 export class TDSnapLexiconParser {
-  parseDb(dbPath: string, locale?: string): TDSnapLexiconData {
+  private fileAdapter: FileAdapter;
+
+  constructor(fileAdapter: FileAdapter = defaultFileAdapter) {
+    this.fileAdapter = fileAdapter;
+  }
+
+  async parseDb(dbPath: string, locale?: string): Promise<TDSnapLexiconData> {
     const detectedLocale = locale || this.inferLocale(dbPath);
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const Database = require('better-sqlite3');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const db = new Database(dbPath, { readonly: true }) as import('better-sqlite3').Database;
+    const { db, cleanup } = await openSqliteDatabase(dbPath, {
+      readonly: true,
+      fileAdapter: this.fileAdapter,
+    });
 
     try {
       return this.extractAll(db, detectedLocale);
     } finally {
-      db.close();
+      if (cleanup) {
+        await cleanup();
+      } else {
+        db.close();
+      }
     }
   }
 
@@ -39,7 +54,7 @@ export class TDSnapLexiconParser {
     return match ? match[1] : 'unknown';
   }
 
-  private extractAll(db: import('better-sqlite3').Database, locale: string): TDSnapLexiconData {
+  private extractAll(db: SqliteDatabaseAdapter, locale: string): TDSnapLexiconData {
     const words = new Map<string, TDSnapLexiconEntry>();
     const subclassCache = new Map<number, string>();
 

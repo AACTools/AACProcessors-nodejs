@@ -62,16 +62,16 @@ export class WordFormGenerator {
     return this.deduplicate(result);
   }
 
-  generateFromPos(
+  async generateFromPos(
     base: string,
     pos: string,
     engine: MorphologyEngine,
     grid3Parser: Grid3VerbsParser,
     verbsZipPath?: string,
     lang: string = 'en'
-  ): AstericsWordForm[] {
+  ): Promise<AstericsWordForm[]> {
     if (verbsZipPath) {
-      const detailed = grid3Parser.parseZipDetailed(verbsZipPath);
+      const detailed = await grid3Parser.parseZipDetailed(verbsZipPath);
       const forms = detailed.verbs.get(base) || detailed.verbs.get(base.toLowerCase());
       if (forms && forms.length > 0) {
         return this.generateFromGrid3Conditions(base, forms, lang);
