@@ -80,6 +80,20 @@ General-purpose utility scripts.
 - **image-map.js** - Image mapping and analysis tools
 - **bench.js** - Run simple performance benchmarks for load/extract/process paths
 
+### 🌐 Browser verification
+
+- **verify-browser-build.js** - Confirms the compiled browser distribution
+  exists and is non-empty (`dist/browser/index.browser.js` and the shared
+  `dist/index.browser.d.ts`). Run with `npm run verify:browser-build`.
+- **verify-rn-bundle.js** - Bundles a copy of `dist/browser` with the real Metro
+  bundler (isolated `test/rn-metro-check` fixture using `babel-preset-expo`) to
+  prove it works in React Native / Expo, including Node core modules reached
+  transitively through dependencies. Run with `npm run verify:rn-bundle`; Metro
+  is installed only in the fixture.
+- **smoke-browser-bundle.js** - End-to-end web smoke test: builds the browser
+  bundle and the Vite demo (`examples/vitedemo`), then checks the output for
+  stray Node references. Run with `npm run smoke:browser`.
+
 ## 🚀 Usage
 
 Most scripts can be run from the repository root:

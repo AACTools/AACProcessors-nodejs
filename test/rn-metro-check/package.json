@@ -1,0 +1,20 @@
+{
+  "name": "aac-processors-rn-metro-check",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Isolated React Native (Metro/Hermes) bundler probe for the built browser distribution.",
+  "scripts": {
+    "bundle": "metro build index.js --platform ios --dev true --out rn-bundle-output.js"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^5.2.0",
+    "jszip": "^3.10.1",
+    "plist": "^3.1.0"
+  },
+  "devDependencies": {
+    "babel-preset-expo": "^57.0.15",
+    "metro": "^0.87.1",
+    "metro-config": "^0.87.1",
+    "metro-runtime": "^0.87.1"
+  }
+}

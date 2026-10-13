@@ -105,6 +105,7 @@
     "format:check": "prettier --check \"src/**/*.{js,ts}\" \"test/**/*.{js,ts}\" \"*.{js,ts,json,md}\"",
     "smoke:browser": "node scripts/smoke-browser-bundle.js",
     "verify:browser-build": "node scripts/verify-browser-build.js",
+    "verify:rn-bundle": "npm run build:browser && node scripts/verify-rn-bundle.js",
     "test": "npm run build && jest",
     "test:watch": "npm run build && jest --watch",
     "test:coverage": "npm run build && jest --coverage",

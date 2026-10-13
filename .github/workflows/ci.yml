@@ -48,6 +48,15 @@ jobs:
       - name: Verify browser build output
         run: test -f dist/browser/index.browser.js
 
+      # Metro 0.87 requires Node >= 22.13
+      - name: Install Metro fixture dependencies
+        if: matrix.node-version == 22
+        run: npm ci --prefix test/rn-metro-check
+
+      - name: Verify browser build bundles with Metro (React Native)
+        if: matrix.node-version == 22
+        run: node scripts/verify-rn-bundle.js
+
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         with:
