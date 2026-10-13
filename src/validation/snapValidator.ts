@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import * as xml2js from 'xml2js';
 import JSZip from 'jszip';
 import { BaseValidator } from './baseValidator';
 import { ValidationResult } from './validationTypes';
 import { defaultFileAdapter, FileAdapter, getBasename, toUint8Array } from '../utils/io';
 import { openSqliteDatabase } from '../utils/sqlite';
+import { parseXmlString } from '../utils/xml';
 
 /**
  * Validator for Snap files (.spb, .sps)
@@ -278,8 +278,7 @@ export class SnapValidator extends BaseValidator {
     await this.add_check('settings_format', 'settings file format', async () => {
       try {
         const content = await entry.async('string');
-        const parser = new xml2js.Parser();
-        const xml = await parser.parseStringPromise(content);
+        const xml = parseXmlString(content);
 
         // Check for expected root element
         if (!xml.settings && !xml.Settings && !xml.page && !xml.Page) {
@@ -309,8 +308,7 @@ export class SnapValidator extends BaseValidator {
     await this.add_check(`page[${index}]`, `page file ${index}: ${entry.name}`, async () => {
       try {
         const content = await entry.async('string');
-        const parser = new xml2js.Parser();
-        const xml = await parser.parseStringPromise(content);
+        const xml = parseXmlString(content);
 
         const page = xml.page || xml.Page;
         if (!page) {

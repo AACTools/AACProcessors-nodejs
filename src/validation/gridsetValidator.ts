@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import * as xml2js from 'xml2js';
 import { BaseValidator } from './baseValidator';
 import { ValidationResult } from './validationTypes';
 import {
@@ -11,6 +10,7 @@ import {
   getBasename,
   toUint8Array,
 } from '../utils/io';
+import { parseXmlString } from '../utils/xml';
 
 /**
  * Validator for Grid3/Smartbox Gridset files (.gridset, .gridsetx)
@@ -46,8 +46,7 @@ export class GridsetValidator extends BaseValidator {
     // Try to parse as XML and check for a Grid 3 <Grid> root element
     try {
       const contentStr = typeof content === 'string' ? content : decodeText(toUint8Array(content));
-      const parser = new xml2js.Parser();
-      const result = await parser.parseStringPromise(contentStr);
+      const result = parseXmlString(contentStr);
       return !!(result && (result.Grid || result.grid));
     } catch {
       return false;
@@ -112,9 +111,8 @@ export class GridsetValidator extends BaseValidator {
     let xmlObj: any = null;
     await this.add_check('xml_parse', 'valid XML', async () => {
       try {
-        const parser = new xml2js.Parser();
         const contentStr = decodeText(content).replace(/^\uFEFF/, '');
-        xmlObj = await parser.parseStringPromise(contentStr);
+        xmlObj = parseXmlString(contentStr);
       } catch (e: any) {
         this.err(`Failed to parse XML: ${e.message}`, true);
       }
@@ -163,10 +161,7 @@ export class GridsetValidator extends BaseValidator {
       await this.add_check(`grid_xml[${entry}]`, `grid structure: ${entry}`, async () => {
         try {
           const gridXml = await zip.readFile(entry);
-          const parser = new xml2js.Parser();
-          const xmlObj = await parser.parseStringPromise(
-            decodeText(toUint8Array(gridXml)).replace(/^\uFEFF/, '')
-          );
+          const xmlObj = parseXmlString(decodeText(toUint8Array(gridXml)).replace(/^\uFEFF/, ''));
           const grid = xmlObj.Grid || xmlObj.grid;
           if (!grid) {
             this.err(`${entry}: missing root <Grid> element`);
@@ -189,8 +184,7 @@ export class GridsetValidator extends BaseValidator {
       } else {
         try {
           const settingsXml = await zip.readFile(settingsEntry);
-          const parser = new xml2js.Parser();
-          const xmlObj = await parser.parseStringPromise(
+          const xmlObj = parseXmlString(
             decodeText(toUint8Array(settingsXml)).replace(/^\uFEFF/, '')
           );
           const settings =

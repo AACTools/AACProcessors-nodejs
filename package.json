@@ -177,7 +177,6 @@
     "typescript": "~5.5.0"
   },
   "dependencies": {
-    "@types/xml2js": "^0.4.14",
     "adm-zip": "^0.5.16",
     "axios": "^1.11.0",
     "better-sqlite3": "^12.5.0",
@@ -187,7 +186,6 @@
     "jszip": "^3.10.1",
     "plist": "^3.1.0",
     "sql.js": "^1.14.1",
-    "xml2js": "^0.6.2",
     "yauzl": "^3.2.0"
   },
   "bin": {
