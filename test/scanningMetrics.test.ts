@@ -47,7 +47,7 @@ describe('Scanning Metrics', () => {
     tree.rootId = 'root';
 
     const calculator = new MetricsCalculator();
-    const result = calculator.analyze(tree);
+    const result = await calculator.analyze(tree);
 
     const btn3Metrics = result.buttons.find((b) => b.label === '3');
     // Steps = 3 (buttons 1, 2, 3), Selections = 1
@@ -83,7 +83,7 @@ describe('Scanning Metrics', () => {
     tree.addPage(page);
 
     const calculator = new MetricsCalculator();
-    const result = calculator.analyze(tree);
+    const result = await calculator.analyze(tree);
 
     const metrics = result.buttons.find((b) => b.label === 'Target');
     // Steps = (rowIndex + 1) + (colIndex + 1) = (2 + 1) + (3 + 1) = 7 steps
@@ -141,7 +141,7 @@ describe('Scanning Metrics', () => {
     tree.addPage(page);
 
     const calculator = new MetricsCalculator();
-    const result = calculator.analyze(tree);
+    const result = await calculator.analyze(tree);
 
     const metrics = result.buttons.find((b) => b.label === 'B2');
     // Steps = blockOrder (2) + btnInBlockIndex (1) + 1 = 4 steps
@@ -172,7 +172,7 @@ describe('Scanning Metrics', () => {
     tree.addPage(page);
 
     const calculator = new MetricsCalculator();
-    const result = calculator.analyze(tree);
+    const result = await calculator.analyze(tree);
 
     const metrics = result.buttons.find((b) => b.label === 'B1');
     // B1 is at root, index 0.

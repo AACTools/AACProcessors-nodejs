@@ -183,7 +183,7 @@ describe('dumpVocabulary on example.gridset', () => {
 
     const processor = new GridsetProcessor();
     const tree = await processor.loadIntoTree(assetPath);
-    const metrics = new MetricsCalculator().analyze(tree);
+    const metrics = await new MetricsCalculator().analyze(tree);
 
     const dump = dumpVocabulary(tree, { metrics });
     const s = dump.summary;

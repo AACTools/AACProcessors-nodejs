@@ -1,16 +1,8 @@
 import { XMLParser } from 'fast-xml-parser';
-import { defaultFileAdapter, getNodeRequire } from '../../../utils/io';
+import { defaultFileAdapter } from '../../../utils/io';
+import type { FileAdapter } from '../../../utils/io';
+import { getZipAdapter } from '../../../utils/zip';
 import type { VerbFormWithConditions, Grid3VerbFormsDetailed } from './types';
-
-// Resolve path helpers through the file adapter (lazily) so this module never
-// statically imports Node's `path` module, which React Native/Metro cannot bundle.
-const { join, dirname, basename } = defaultFileAdapter;
-
-// `adm-zip` depends on Node's `path`, so load it lazily to keep this module
-// bundleable in browser/React Native environments (where only parseXml is used).
-function loadAdmZip(): typeof import('adm-zip') {
-  return getNodeRequire()('adm-zip') as typeof import('adm-zip');
-}
 
 export interface Grid3VerbForms {
   locale: string;
@@ -41,6 +33,11 @@ export class Grid3VerbsParser {
     ignoreDeclaration: true,
     textNodeName: '#text',
   });
+  private fileAdapter: FileAdapter;
+
+  constructor(fileAdapter: FileAdapter = defaultFileAdapter) {
+    this.fileAdapter = fileAdapter;
+  }
 
   parseXml(xmlContent: string, locale?: string): Grid3VerbForms {
     const data = this.parser.parse(xmlContent);
@@ -86,75 +83,73 @@ export class Grid3VerbsParser {
     return { locale: detectedLocale, verbs: result };
   }
 
-  parseXmlFileDetailed(filePath: string): Grid3VerbFormsDetailed {
-    const fs = getNodeRequire()('fs') as typeof import('fs');
-    const xml = fs.readFileSync(filePath, 'utf-8');
+  async parseXmlFileDetailed(filePath: string): Promise<Grid3VerbFormsDetailed> {
+    const xml = await this.fileAdapter.readTextFromInput(filePath);
     return this.parseXmlDetailed(xml);
   }
 
-  parseZip(zipPath: string): Grid3VerbForms {
-    const AdmZip = loadAdmZip();
-    const zip = new AdmZip(zipPath);
-    const entries = zip.getEntries();
-    const verbEntry = entries.find((e) => e.entryName.toLowerCase().endsWith('verbs.xml'));
-    if (!verbEntry) {
-      const locale = basename(dirname(zipPath));
+  private async readVerbsXml(zipPath: string): Promise<string | null> {
+    const zip = await getZipAdapter(zipPath, this.fileAdapter);
+    const verbEntry = zip.listFiles().find((entry) => entry.toLowerCase().endsWith('verbs.xml'));
+    if (!verbEntry) return null;
+    return this.fileAdapter.readTextFromInput(await zip.readFile(verbEntry));
+  }
+
+  async parseZip(zipPath: string): Promise<Grid3VerbForms> {
+    const xml = await this.readVerbsXml(zipPath);
+    if (xml === null) {
+      const locale = this.fileAdapter.basename(this.fileAdapter.dirname(zipPath));
       return { locale, verbs: new Map() };
     }
-    const xml = verbEntry.getData().toString('utf-8');
     return this.parseXml(xml);
   }
 
-  parseZipDetailed(zipPath: string): Grid3VerbFormsDetailed {
-    const AdmZip = loadAdmZip();
-    const zip = new AdmZip(zipPath);
-    const entries = zip.getEntries();
-    const verbEntry = entries.find((e) => e.entryName.toLowerCase().endsWith('verbs.xml'));
-    if (!verbEntry) {
-      const locale = basename(dirname(zipPath));
+  async parseZipDetailed(zipPath: string): Promise<Grid3VerbFormsDetailed> {
+    const xml = await this.readVerbsXml(zipPath);
+    if (xml === null) {
+      const locale = this.fileAdapter.basename(this.fileAdapter.dirname(zipPath));
       return { locale, verbs: new Map() };
     }
-    const xml = verbEntry.getData().toString('utf-8');
     return this.parseXmlDetailed(xml);
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async parseLocale(locale: string, grid3InstallPath?: string): Promise<Grid3VerbForms> {
-    const installPath = grid3InstallPath || this.getDefaultInstallPath();
+    const installPath = grid3InstallPath || (await this.getDefaultInstallPath());
     if (!installPath) {
       return { locale, verbs: new Map() };
     }
-    const zipPath = join(installPath, 'Locale', locale, 'verbs', 'verbs.zip');
+    const zipPath = this.fileAdapter.join(installPath, 'Locale', locale, 'verbs', 'verbs.zip');
     try {
-      return this.parseZip(zipPath);
+      return await this.parseZip(zipPath);
     } catch {
       return { locale, verbs: new Map() };
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async parseInstalledLocales(grid3InstallPath?: string): Promise<Map<string, Grid3VerbForms>> {
-    const installPath = grid3InstallPath || this.getDefaultInstallPath();
+    const installPath = grid3InstallPath || (await this.getDefaultInstallPath());
     const results = new Map<string, Grid3VerbForms>();
     if (!installPath) return results;
 
-    const fs = getNodeRequire()('fs') as typeof import('fs');
-    const localeDir = join(installPath, 'Locale');
+    const localeDir = this.fileAdapter.join(installPath, 'Locale');
     let locales: string[];
     try {
-      locales = fs
-        .readdirSync(localeDir)
-        .filter((d) => fs.statSync(join(localeDir, d)).isDirectory());
+      const entries = await this.fileAdapter.listDir(localeDir);
+      locales = [];
+      for (const entry of entries) {
+        if (await this.fileAdapter.isDirectory(this.fileAdapter.join(localeDir, entry))) {
+          locales.push(entry);
+        }
+      }
     } catch {
       return results;
     }
 
     for (const locale of locales) {
-      const verbsZip = join(localeDir, locale, 'verbs', 'verbs.zip');
+      const verbsZip = this.fileAdapter.join(localeDir, locale, 'verbs', 'verbs.zip');
       try {
-        fs.accessSync(verbsZip, fs.constants.R_OK);
-        const forms = this.parseZip(verbsZip);
-        results.set(locale, forms);
+        if (!(await this.fileAdapter.pathExists(verbsZip))) continue;
+        results.set(locale, await this.parseZip(verbsZip));
       } catch {
         // No verbs.zip for this locale
       }
@@ -174,22 +169,24 @@ export class Grid3VerbsParser {
    * This allows users to supply morphology data copied from any Grid 3
    * installation without needing Grid 3 installed on this machine.
    */
-  parseCustomDirectory(dirPath: string, detailed?: false): Map<string, Grid3VerbForms>;
+  parseCustomDirectory(dirPath: string, detailed?: false): Promise<Map<string, Grid3VerbForms>>;
   parseCustomDirectory(
     dirPath: string,
     detailed: true
-  ): Map<string, import('./types').Grid3VerbFormsDetailed>;
-  parseCustomDirectory(
+  ): Promise<Map<string, import('./types').Grid3VerbFormsDetailed>>;
+  async parseCustomDirectory(
     dirPath: string,
     detailed = false
-  ): Map<string, Grid3VerbForms> | Map<string, import('./types').Grid3VerbFormsDetailed> {
-    /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
-    const fs = getNodeRequire()('fs') as typeof import('fs');
+  ): Promise<Map<string, Grid3VerbForms> | Map<string, import('./types').Grid3VerbFormsDetailed>> {
     let locales: string[];
     try {
-      locales = fs
-        .readdirSync(dirPath)
-        .filter((d: string) => fs.statSync(join(dirPath, d)).isDirectory());
+      const entries = await this.fileAdapter.listDir(dirPath);
+      locales = [];
+      for (const entry of entries) {
+        if (await this.fileAdapter.isDirectory(this.fileAdapter.join(dirPath, entry))) {
+          locales.push(entry);
+        }
+      }
     } catch {
       return new Map();
     }
@@ -197,10 +194,10 @@ export class Grid3VerbsParser {
     if (detailed) {
       const results = new Map<string, import('./types').Grid3VerbFormsDetailed>();
       for (const locale of locales) {
-        const verbsZip = join(dirPath, locale, 'verbs', 'verbs.zip');
+        const verbsZip = this.fileAdapter.join(dirPath, locale, 'verbs', 'verbs.zip');
         try {
-          fs.accessSync(verbsZip, fs.constants.R_OK);
-          results.set(locale, this.parseZipDetailed(verbsZip));
+          if (!(await this.fileAdapter.pathExists(verbsZip))) continue;
+          results.set(locale, await this.parseZipDetailed(verbsZip));
         } catch {
           // No verbs.zip for this locale
         }
@@ -210,19 +207,18 @@ export class Grid3VerbsParser {
 
     const results = new Map<string, Grid3VerbForms>();
     for (const locale of locales) {
-      const verbsZip = join(dirPath, locale, 'verbs', 'verbs.zip');
+      const verbsZip = this.fileAdapter.join(dirPath, locale, 'verbs', 'verbs.zip');
       try {
-        fs.accessSync(verbsZip, fs.constants.R_OK);
-        results.set(locale, this.parseZip(verbsZip));
+        if (!(await this.fileAdapter.pathExists(verbsZip))) continue;
+        results.set(locale, await this.parseZip(verbsZip));
       } catch {
         // No verbs.zip for this locale
       }
     }
     return results;
-    /* eslint-enable @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
   }
 
-  private getDefaultInstallPath(): string | null {
+  private async getDefaultInstallPath(): Promise<string | null> {
     if (typeof process === 'undefined' || process.platform !== 'win32') {
       return null;
     }
@@ -231,9 +227,8 @@ export class Grid3VerbsParser {
       'C:\\Program Files\\Smartbox\\Grid 3',
     ];
     try {
-      const fs = getNodeRequire()('fs') as typeof import('fs');
       for (const p of paths) {
-        if (fs.existsSync(p)) return p;
+        if (await this.fileAdapter.pathExists(p)) return p;
       }
     } catch {
       // Grid 3 not installed

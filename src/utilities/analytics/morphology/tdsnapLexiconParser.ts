@@ -1,4 +1,7 @@
-import { requireBetterSqlite3 } from '../../../utils/sqlite';
+import { defaultFileAdapter } from '../../../utils/io';
+import type { FileAdapter } from '../../../utils/io';
+import { openSqliteDatabase } from '../../../utils/sqlite';
+import type { SqliteDatabaseAdapter } from '../../../utils/sqlite';
 
 export interface TDSnapLexiconForm {
   tag: string;
@@ -22,15 +25,27 @@ interface PosSubclassRow {
 }
 
 export class TDSnapLexiconParser {
-  parseDb(dbPath: string, locale?: string): TDSnapLexiconData {
+  private fileAdapter: FileAdapter;
+
+  constructor(fileAdapter: FileAdapter = defaultFileAdapter) {
+    this.fileAdapter = fileAdapter;
+  }
+
+  async parseDb(dbPath: string, locale?: string): Promise<TDSnapLexiconData> {
     const detectedLocale = locale || this.inferLocale(dbPath);
-    const Database = requireBetterSqlite3();
-    const db = new Database(dbPath, { readonly: true });
+    const { db, cleanup } = await openSqliteDatabase(dbPath, {
+      readonly: true,
+      fileAdapter: this.fileAdapter,
+    });
 
     try {
       return this.extractAll(db, detectedLocale);
     } finally {
-      db.close();
+      if (cleanup) {
+        await cleanup();
+      } else {
+        db.close();
+      }
     }
   }
 
@@ -39,7 +54,7 @@ export class TDSnapLexiconParser {
     return match ? match[1] : 'unknown';
   }
 
-  private extractAll(db: import('better-sqlite3').Database, locale: string): TDSnapLexiconData {
+  private extractAll(db: SqliteDatabaseAdapter, locale: string): TDSnapLexiconData {
     const words = new Map<string, TDSnapLexiconEntry>();
     const subclassCache = new Map<number, string>();
 

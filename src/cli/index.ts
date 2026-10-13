@@ -578,7 +578,7 @@ program
         }
 
         const calculator = new MetricsCalculator();
-        const metrics = calculator.analyze(tree, {
+        const metrics = await calculator.analyze(tree, {
           scanningConfig,
           useSmartGrammar: options.smartGrammar,
         });
@@ -669,7 +669,7 @@ program
           const tree = await processor.loadIntoTree(file);
           // analyze() first: it expands morphological predictions on the tree,
           // which dumpVocabulary() needs for the word-form counts.
-          const metrics = new MetricsCalculator().analyze(tree, {
+          const metrics = await new MetricsCalculator().analyze(tree, {
             useSmartGrammar: options.smartGrammar,
           });
           dump = dumpVocabulary(tree, { metrics });

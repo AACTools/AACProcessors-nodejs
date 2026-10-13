@@ -36,12 +36,12 @@ function buildTreeWithPredictions(
 }
 
 describe('Suggest Words effort cost', () => {
-  it('adds confirmation cost to Suggest Words word forms', () => {
+  it('adds confirmation cost to Suggest Words word forms', async () => {
     const suggestWords = ['something', 'someone', 'somewhere'];
     const { tree } = buildTreeWithPredictions(suggestWords, suggestWords);
 
     const calculator = new MetricsCalculator();
-    const result = calculator.analyze(tree, { useSmartGrammar: true });
+    const result = await calculator.analyze(tree, { useSmartGrammar: true });
 
     const parentBtn = result.buttons.find((b) => b.label === 'some');
     expect(parentBtn).toBeDefined();
@@ -56,12 +56,12 @@ describe('Suggest Words effort cost', () => {
     expect(something!.effort).toBeCloseTo(expectedEffort, 4);
   });
 
-  it('does not add confirmation cost to morphology word forms', () => {
+  it('does not add confirmation cost to morphology word forms', async () => {
     const predictions = ['goes', 'going', 'went'];
     const { tree } = buildTreeWithPredictions(predictions, undefined, 'Verb');
 
     const calculator = new MetricsCalculator();
-    const result = calculator.analyze(tree, { useSmartGrammar: true });
+    const result = await calculator.analyze(tree, { useSmartGrammar: true });
 
     const parentBtn = result.buttons.find((b) => b.label === 'some');
     expect(parentBtn).toBeDefined();
@@ -74,13 +74,13 @@ describe('Suggest Words effort cost', () => {
     expect(goes!.effort).toBeCloseTo(parentBtn!.effort + visualScanEffort(0), 4);
   });
 
-  it('only adds confirmation to Suggest Words forms when predictions are mixed', () => {
+  it('only adds confirmation to Suggest Words forms when predictions are mixed', async () => {
     const suggestWordsOriginals = ['something', 'someone'];
     const allPredictions = ['something', 'someone', 'somes'];
     const { tree } = buildTreeWithPredictions(allPredictions, suggestWordsOriginals, 'Noun');
 
     const calculator = new MetricsCalculator();
-    const result = calculator.analyze(tree, { useSmartGrammar: true });
+    const result = await calculator.analyze(tree, { useSmartGrammar: true });
 
     const parentBtn = result.buttons.find((b) => b.label === 'some');
 
@@ -99,12 +99,12 @@ describe('Suggest Words effort cost', () => {
     expect(somes!.effort).toBeCloseTo(parentBtn!.effort + visualScanEffort(2), 4);
   });
 
-  it('has no confirmation when parameters.predictions is absent', () => {
+  it('has no confirmation when parameters.predictions is absent', async () => {
     const predictions = ['something', 'someone'];
     const { tree } = buildTreeWithPredictions(predictions, undefined, 'Noun');
 
     const calculator = new MetricsCalculator();
-    const result = calculator.analyze(tree, { useSmartGrammar: true });
+    const result = await calculator.analyze(tree, { useSmartGrammar: true });
 
     const parentBtn = result.buttons.find((b) => b.label === 'some');
 
