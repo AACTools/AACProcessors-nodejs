@@ -48,8 +48,7 @@ jobs:
       - name: Verify browser build output
         run: test -f dist/browser/index.browser.js
 
-      # Metro 0.87 requires Node >= 22.13, so only run the React Native guard
-      # on the Node 22 leg. `test:ci` has already built dist/browser.
+      # Metro 0.87 requires Node >= 22.13
       - name: Install Metro fixture dependencies
         if: matrix.node-version == 22
         run: npm ci --prefix test/rn-metro-check
