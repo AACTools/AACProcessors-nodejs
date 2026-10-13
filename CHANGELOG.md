@@ -56,10 +56,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   statically imported Node's `path` and `adm-zip`, and `TDSnapLexiconParser`
   statically required `better-sqlite3`, so importing the browser or metrics
   entry points failed in Metro (React Native/Expo) with
-  `Unable to resolve module path`. Path helpers now come from the lazy
-  `FileAdapter`, and `adm-zip`/`fs`/`better-sqlite3` are loaded through the
-  runtime-safe `getNodeRequire()`/`requireBetterSqlite3()` helpers, keeping the
-  Node-only code paths intact while allowing these modules to be bundled.
+  `Unable to resolve module path`. Both parsers now take a `FileAdapter`,
+  `Grid3VerbsParser` reads archives through `getZipAdapter` (Node `adm-zip` /
+  browser `jszip`), and `TDSnapLexiconParser` opens databases through
+  `openSqliteDatabase` (`better-sqlite3` on Node, `sql.js` in the browser), so
+  these modules are safe to bundle for web and native.
+
+  **Breaking change:** `Grid3VerbsParser.parseZip`/`parseZipDetailed`/
+  `parseXmlFileDetailed`/`parseCustomDirectory`, `TDSnapLexiconParser.parseDb`,
+  `WordFormGenerator.generateFromPos` and `MetricsCalculator.analyze` are now
+  asynchronous.
+
 - **OBF/OBZ manifest `root` bug.** `ObfProcessor.saveFromTree` and
   `saveModifiedTree` set `manifest.root` to the board **ID** (e.g. `"1"`)
   instead of the board **file path** (e.g. `"1.obf"`). This produced OBZ
