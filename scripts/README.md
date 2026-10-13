@@ -80,21 +80,19 @@ General-purpose utility scripts.
 - **image-map.js** - Image mapping and analysis tools
 - **bench.js** - Run simple performance benchmarks for load/extract/process paths
 
-### 📱 React Native bundle verification
+### 🌐 Browser verification
 
-- **verify-rn-bundle.js** - Runs the *actual* Metro bundler against a copy of
-  `dist/browser` (isolated fixture in `test/rn-metro-check`, using
-  `babel-preset-expo`) to prove the browser distribution can be bundled for
-  React Native / Expo. It catches Node core modules reached transitively through
-  dependencies (for example a dependency that requires `events`, `stream` or
-  `timers`), which scanning our own compiled files cannot see. Run with
-  `npm run verify:rn-bundle`. Metro is installed only in the fixture
-  (`npm --prefix test/rn-metro-check install`), not in the library's runtime
-  dependencies.
-
-> The probe previously failed on `xml2js` (used by the Gridset/Snap/TouchChat
-> validators), which required `events`/`timers` and `sax` -> `stream`. The
-> validators now use `fast-xml-parser`, so the browser build bundles cleanly.
+- **verify-browser-build.js** - Confirms the compiled browser distribution
+  exists and is non-empty (`dist/browser/index.browser.js` and the shared
+  `dist/index.browser.d.ts`). Run with `npm run verify:browser-build`.
+- **verify-rn-bundle.js** - Bundles a copy of `dist/browser` with the real Metro
+  bundler (isolated `test/rn-metro-check` fixture using `babel-preset-expo`) to
+  prove it works in React Native / Expo, including Node core modules reached
+  transitively through dependencies. Run with `npm run verify:rn-bundle`; Metro
+  is installed only in the fixture.
+- **smoke-browser-bundle.js** - End-to-end web smoke test: builds the browser
+  bundle and the Vite demo (`examples/vitedemo`), then checks the output for
+  stray Node references. Run with `npm run smoke:browser`.
 
 ## 🚀 Usage
 
