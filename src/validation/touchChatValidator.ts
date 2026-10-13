@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import * as xml2js from 'xml2js';
 import { BaseValidator } from './baseValidator';
 import { ValidationResult } from './validationTypes';
 import {
@@ -13,6 +12,7 @@ import {
   toUint8Array,
 } from '../utils/io';
 import { openSqliteDatabase } from '../utils/sqlite';
+import { parseXmlString } from '../utils/xml';
 import { getZipAdapter, ZipAdapter } from '../utils/zip';
 
 /**
@@ -69,8 +69,7 @@ export class TouchChatValidator extends BaseValidator {
     // Try to parse as XML and check for TouchChat structure
     try {
       const contentStr = typeof content === 'string' ? content : decodeText(toUint8Array(content));
-      const parser = new xml2js.Parser();
-      const result = await parser.parseStringPromise(contentStr);
+      const result = parseXmlString(contentStr);
       // TouchChat files typically have specific structure
       return result && (result.PageSet || result.Pageset || result.page || result.Page);
     } catch {
@@ -106,9 +105,8 @@ export class TouchChatValidator extends BaseValidator {
       let xmlObj: any = null;
       await this.add_check('xml_parse', 'valid XML', async () => {
         try {
-          const parser = new xml2js.Parser();
           const contentStr = decodeText(content);
-          xmlObj = await parser.parseStringPromise(contentStr);
+          xmlObj = parseXmlString(contentStr);
         } catch (e: any) {
           this.err(`Failed to parse XML: ${e.message}`, true);
         }
