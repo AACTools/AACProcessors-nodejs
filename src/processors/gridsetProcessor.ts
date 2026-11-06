@@ -102,7 +102,7 @@ class GridsetProcessor extends BaseProcessor {
    * Uses WCAG relative luminance formula to determine contrast
    */
   private getContrastFontColor(backgroundColor: string | undefined): string {
-    if (!backgroundColor) return '#FF000000FF'; // Default to black
+    if (!backgroundColor) return '#000000'; // Default to black (6-digit, like the returns below)
 
     // Parse color from various formats
     let r = 255,
@@ -3314,11 +3314,19 @@ class GridsetProcessor extends BaseProcessor {
                         if (button.style?.borderColor) {
                           styleObj.BorderColour = this.ensureAlphaChannel(button.style.borderColor);
                         }
-                        // Always add font color inline - either from button style or calculated from background
-                        const fontColor =
-                          button.style?.fontColor ||
-                          this.getContrastFontColor(button.style?.backgroundColor);
-                        styleObj.FontColour = this.ensureAlphaChannel(fontColor);
+                        // Add inline font colour when explicitly set, or calculated
+                        // for regular cells. Plugin cells (Workspace/LiveCell/
+                        // AutoContent) rely on their BasedOnStyle (e.g. the
+                        // Workspace style) for text colour — an unconditional
+                        // inline FontColour overrides it and can render the
+                        // workspace text invisible in Grid 3 (#57).
+                        const explicitFontColor = button.style?.fontColor;
+                        if (explicitFontColor || !isPluginCell) {
+                          const fontColor =
+                            explicitFontColor ||
+                            this.getContrastFontColor(button.style?.backgroundColor);
+                          styleObj.FontColour = this.ensureAlphaChannel(fontColor);
+                        }
                         if (button.style?.fontFamily) {
                           styleObj.FontName = button.style.fontFamily;
                         }
